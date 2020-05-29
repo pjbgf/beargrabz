@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: beargrabz
+spec:
+  containers:
+  - name: beargrabz
+    image: paulinhu/beargrabz
+    imagePullPolicy: Always
+    securityContext:
+      capabilities:
+        add: ["NET_ADMIN"]
+      allowPrivilegeEscalation: false
+  hostNetwork: true
+  automountServiceAccountToken: false

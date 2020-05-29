@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  labels:
+    app: httpbin
+spec:
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 80
+  selector:
+    app: httpbin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin
+  template:
+    metadata:
+      labels:
+        app: httpbin
+    spec:
+      containers:
+      - image: docker.io/kennethreitz/httpbin
+        imagePullPolicy: IfNotPresent
+        name: httpbin
+        ports:
+        - containerPort: 80
+        securityContext:
+          allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-client
+spec:
+  containers:
+  - name: api-client
+    image: alpine
+    command: ["sh"]
+    args: ["-c", "watch -n 1 timeout 1 wget --header \\\"Authorization: Bearer SUPERTOKEN\\\" -O- http://httpbin:8000"]
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
+      allowPrivilegeEscalation: false
+  automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: beargrabz
+spec:
+  containers:
+  - name: beargrabz
+    image: paulinhu/beargrabz
+    imagePullPolicy: Always
+    securityContext:
+      capabilities:
+        add: ["NET_ADMIN"]
+      allowPrivilegeEscalation: false
+  hostNetwork: true
+  automountServiceAccountToken: false
